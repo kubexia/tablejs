@@ -14,7 +14,7 @@
             var $instance = this;
             
             var $defaultConfigs = {
-                
+                loadingText: '<i class="fa fa-spin fa-spinner fa-fw"></i>'
             };
             
             var $table = null;
@@ -27,6 +27,13 @@
             };
             
             var $callbacks = {};
+            
+            var $events = {
+                '.table-item-delete': {
+                    'type': 'click',
+                    'method': 'event_itemDelete'
+                }
+            };
             
             this.init = function(){
                 this.setDefaultConfigs($defaultConfigs);
@@ -50,6 +57,52 @@
                     
                     return $instance['event_' + $(this).attr('data-event')]($(this));
                 });
+                
+                $.each($events, function(handler, event){
+                    $(document).on(event.type,handler,function(e){
+                        e.preventDefault();
+                        return $instance[event.method]($(this));
+                    });
+                })
+            };
+            
+            
+            this.event_itemDelete = function(object){
+                $table = object.closest($handler);
+                var returnUrl = (object.data('return-url') !== undefined && object.data('return-url') !== '' ? object.data('return-url') : $table.attr('data-baseurl'));
+                
+                if(confirm(object.data('message'))){
+                    var row = object.closest('td');
+                    row.html(this.getConfig('loadingText'));
+                    
+                    $.ajax({
+                        type: "POST",
+                        url: object.data('request-url'),
+                        dataType: 'json',
+                        data: {'_method': 'DELETE'},
+                        success: function(data){
+                            $instance.setResponse(data);
+                            
+                            if($instance.getResponseSuccess() === true){
+                                if(object.data('callback-success') !== undefined){
+                                    var cb = window[object.data('callback-success')];
+                                    if (typeof cb === "function"){
+                                        return cb($instance,$table,data);
+                                    }
+                                }
+                                else{
+                                    if($instance.getResponseData('redirect_to')){
+                                        returnUrl = $instance.getResponseData('redirect_to');
+                                    }
+                                    document.location.href = (returnUrl ? returnUrl : document.location.href);
+                                }
+                            }
+                        },
+                        error: function(xhr, textStatus, errorThrown){
+                            console.log(xhr.responseText);
+                        }
+                    });
+                }
             };
             
             this.getConfig = function(name){
@@ -72,11 +125,11 @@
             };
             
             this.getResponseData = function(name){
-                return ($response.data[name] !== undefined ? $response.data[name] : null);
+                return ($response.data !== null && $response.data[name] !== undefined ? $response.data[name] : null);
             };
             
             this.hasResponseData = function(name){
-                return ($response.data[name] !== undefined ? true : false);
+                return ($response.data !== null && $response.data[name] !== undefined ? true : false);
             };
             
             this.getResponseErrors = function(){
@@ -84,7 +137,7 @@
             };
             
             this.getResponseMessage = function(name){
-                return ($response.message[name] !== undefined ? $response.message[name] : null);
+                return ($response.message !== null && $response.message[name] !== undefined ? $response.message[name] : null);
             };
             
             /**
