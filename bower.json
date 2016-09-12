@@ -1,0 +1,8 @@
+{
+  "name" : "kubexia-tablejs",
+  "main" : "table.js",
+  "ignore": [
+      "*",
+      "!src/*"
+  ]
+}
