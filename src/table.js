@@ -32,6 +32,11 @@
                 '.table-item-delete': {
                     'type': 'click',
                     'method': 'event_itemDelete'
+                },
+                
+                '.table-modal-open': {
+                    'type': 'click',
+                    'method': 'event_openModal'
                 }
             };
             
@@ -103,6 +108,10 @@
                         }
                     });
                 }
+            };
+            
+            this.event_openModal = function(object){
+                
             };
             
             this.getConfig = function(name){
